@@ -34,7 +34,7 @@ public class HistorianBuilderTest {
 
     assertNotNull(historian.context);
     assertNotNull(historian.dbOpenHelper);
-    assertNotNull(historian.logWriter);
+    assertNotNull(historian.logWriterDB);
 
 //    String path = context.getFilesDir() + File.separator + Historian.DB_NAME;
 //    assertEquals(historian.dbOpenHelper.getDatabaseName(), path);
@@ -60,7 +60,7 @@ public class HistorianBuilderTest {
 
     assertNotNull(historian.context);
     assertNotNull(historian.dbOpenHelper);
-    assertNotNull(historian.logWriter);
+    assertNotNull(historian.logWriterDB);
 
 //    String path = context.getExternalFilesDir(null) + File.separator + "test.db";
 //    assertEquals(path, historian.dbOpenHelper.getDatabaseName());

@@ -4,12 +4,11 @@ apply plugin: 'com.github.ben-manes.versions'
 apply from: '../gradle/dependencies.gradle'
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion "25.0.2"
+  compileSdkVersion 28
   defaultConfig {
     applicationId "net.yslibrary.historian.sample"
     minSdkVersion 15
-    targetSdkVersion 25
+    targetSdkVersion 28
     versionCode 1
     versionName "1.0"
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

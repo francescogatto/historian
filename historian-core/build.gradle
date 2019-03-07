@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.novoda.bintray-release'
 apply plugin: 'jacoco'
@@ -10,12 +12,11 @@ def isCi = "true".equals(System.getenv("CI"))
 def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion "25.0.2"
+  compileSdkVersion 28
 
   defaultConfig {
     minSdkVersion 15
-    targetSdkVersion 25
+    targetSdkVersion 28
     versionCode 1
     versionName "1.0"
 
@@ -55,6 +56,7 @@ dependencies {
 
   testCompile deps.junit
   testCompile deps.robolectric
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 publish {
@@ -95,4 +97,7 @@ task jacocoTestReportDebug(type: JacocoReport, dependsOn: ['testDebugUnitTest'])
     println "jacoco xml report has been generated to file://${buildDir}/reports/jacoco/test/jacocoTestReportDebug.xml"
     println "jacoco html report has been generated to file://${reports.html.destination}/index.html"
   }
+}
+repositories {
+  mavenCentral()
 }

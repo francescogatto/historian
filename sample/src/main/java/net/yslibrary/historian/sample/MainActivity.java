@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
       public void onClick(View view) {
         for (int i = 0, l = 100; i < 100; i++) {
           Timber.i("test: %d", counter.getAndIncrement());
+          Timber.e( new RuntimeException("sjndjf"),"Error");
         }
       }
     });

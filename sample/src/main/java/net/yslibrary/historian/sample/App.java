@@ -8,6 +8,7 @@ import com.facebook.stetho.Stetho;
 
 import net.yslibrary.historian.Historian;
 import net.yslibrary.historian.HistorianInspectorModulesProvider;
+import net.yslibrary.historian.tree.HistorianDebugTree;
 import net.yslibrary.historian.tree.HistorianTree;
 
 import timber.log.Timber;
@@ -32,14 +33,11 @@ public class App extends Application {
   public void onCreate() {
     super.onCreate();
 
-    historian = Historian.builder(this)
-        .build();
+    historian = Historian.builder(this).build();
     historian.initialize();
 
-    Timber.plant(new Timber.DebugTree());
+    Timber.plant(new HistorianDebugTree());
     Timber.plant(HistorianTree.with(historian));
-
-    Timber.d(historian.dbPath());
 
     Stetho.initialize(Stetho.newInitializerBuilder(this)
         .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))

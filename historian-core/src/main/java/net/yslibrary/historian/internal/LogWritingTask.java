@@ -9,14 +9,14 @@ import net.yslibrary.historian.Historian;
 public class LogWritingTask implements Runnable {
 
   private final Historian.Callbacks callbacks;
-  private final LogWriter logWriter;
+  private final LogWriterDB logWriterDB;
   private final LogEntity log;
 
   public LogWritingTask(Historian.Callbacks callbacks,
-                        LogWriter logWriter,
+                        LogWriterDB logWriterDB,
                         LogEntity log) {
     this.callbacks = callbacks;
-    this.logWriter = logWriter;
+    this.logWriterDB = logWriterDB;
     this.log = log;
   }
 
@@ -24,7 +24,7 @@ public class LogWritingTask implements Runnable {
   public void run() {
 
     try {
-      logWriter.log(log);
+      logWriterDB.log(log);
 
       callbacks.onSuccess();
     } catch (final Throwable throwable) {

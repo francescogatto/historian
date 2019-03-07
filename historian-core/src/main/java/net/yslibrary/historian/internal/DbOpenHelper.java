@@ -12,8 +12,10 @@ public class DbOpenHelper extends SQLiteOpenHelper {
 
   private static final int DB_VERSION = 2;
 
+  private Context context;
   public DbOpenHelper(Context context, String name) {
     super(context, name, null, DB_VERSION);
+    this.context = context;
   }
 
   @Override
@@ -46,5 +48,9 @@ public class DbOpenHelper extends SQLiteOpenHelper {
 
   interface Transaction {
     void call(SQLiteDatabase db);
+  }
+
+  public Context  getContext() {
+    return context;
   }
 }

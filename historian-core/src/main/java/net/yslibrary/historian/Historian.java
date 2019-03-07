@@ -7,7 +7,7 @@ import android.util.Log;
 
 import net.yslibrary.historian.internal.DbOpenHelper;
 import net.yslibrary.historian.internal.LogEntity;
-import net.yslibrary.historian.internal.LogWriter;
+import net.yslibrary.historian.internal.LogWriterDB;
 import net.yslibrary.historian.internal.LogWritingTask;
 
 import java.io.File;
@@ -22,294 +22,309 @@ import java.util.concurrent.Executors;
 
 public class Historian {
 
-  static final String DB_NAME = "log.db";
-  static final int SIZE = 500;
-  static final int LOG_LEVEL = Log.INFO;
+    static final String DB_NAME = "log.db";
+    static final int SIZE = 500;
+    static final int LOG_LEVEL = Log.INFO;
 
-  private static final String TAG = "Historian";
+    private static final String TAG = "Historian";
 
-  final DbOpenHelper dbOpenHelper;
-  final LogWriter logWriter;
-  final Context context;
-  final File directory;
-  final String dbName;
-  final int size;
-  final int logLevel;
-  final boolean debug;
-  final Callbacks callbacks;
+    final DbOpenHelper dbOpenHelper;
+    final LogWriterDB logWriterDB;
+    final Context context;
+    final File directory;
+    final String dbName;
+    final int size;
+    final int logLevel;
+    final boolean debug;
+    final Callbacks callbacks;
 
-  private final ExecutorService executorService;
-  private boolean initialized = false;
+    private final ExecutorService executorService;
+    private boolean initialized = false;
 
-  private Historian(Context context,
-                    File directory,
-                    String name,
-                    int size,
-                    int logLevel,
-                    boolean debug,
-                    Callbacks callbacks) {
-    this.context = context;
-    this.directory = directory;
-    this.dbName = name;
-    this.size = size;
-    this.logLevel = logLevel;
-    this.debug = debug;
-    this.callbacks = (callbacks == null) ? new DefaultCallbacks(debug) : callbacks;
+    private Historian(Context context,
+                      File directory,
+                      String name,
+                      int size,
+                      int logLevel,
+                      boolean debug,
+                      Callbacks callbacks) {
+        this.context = context;
+        this.directory = directory;
+        this.dbName = name;
+        this.size = size;
+        this.logLevel = logLevel;
+        this.debug = debug;
+        this.callbacks = (callbacks == null) ? new DefaultCallbacks(debug) : callbacks;
 
-    createDirIfNeeded(directory);
-    try {
-      dbOpenHelper = new DbOpenHelper(context, directory.getCanonicalPath() + File.separator + name);
-    } catch (IOException e) {
-      throw new HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.getAbsolutePath(), e);
-    }
+        createDirIfNeeded(directory);
+        try {
+            dbOpenHelper = new DbOpenHelper(context, directory.getCanonicalPath() + File.separator + name);
+        } catch (IOException e) {
+            throw new HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.getAbsolutePath(), e);
+        }
 
-    if (debug)
-      Log.d(TAG, String.format(Locale.ENGLISH, "backing database file will be created at: %s", dbOpenHelper.getDatabaseName()));
+        if (debug)
+            Log.d(TAG, String.format(Locale.ENGLISH, "backing database file will be created at: %s", dbOpenHelper.getDatabaseName()));
 
-    executorService = Executors.newSingleThreadExecutor();
-    logWriter = new LogWriter(dbOpenHelper, size);
-  }
-
-  /**
-   * Get Builder
-   *
-   * @param context Context
-   * @return {@link Builder}
-   */
-  @CheckResult
-  public static Builder builder(Context context) {
-    return new Builder(context);
-  }
-
-  /**
-   * initialize
-   */
-  public void initialize() {
-    if (initialized) return;
-
-    dbOpenHelper.getWritableDatabase();
-
-    initialized = true;
-  }
-
-  public void log(int priority, String tag, String message) {
-    checkInitialized();
-
-    if (priority < logLevel) return;
-    if (message == null || message.length() == 0) return;
-
-    executorService.execute(
-        new LogWritingTask(
-            callbacks,
-            logWriter,
-            LogEntity.create(priority, tag, message, System.currentTimeMillis())
-        )
-    );
-  }
-
-  /**
-   * Terminate Historian
-   * This method will perform;
-   * - close underlying {@link net.yslibrary.historian.internal.DbOpenHelper}
-   * <p>
-   * After calling this method, all calls to this instance of {@link net.yslibrary.historian.Historian}
-   * can produce exception or undefined behavior.
-   */
-  public void terminate() {
-    checkInitialized();
-    dbOpenHelper.close();
-  }
-
-  /**
-   * delete cache
-   */
-  public void delete() {
-    checkInitialized();
-    logWriter.delete();
-  }
-
-  /**
-   * Get absolute path of database file
-   *
-   * @return absolute path of database file
-   */
-  public String dbPath() {
-    checkInitialized();
-    try {
-      return directory.getCanonicalPath() + File.separator + dbName;
-    } catch (IOException e) {
-      throw new HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.getAbsolutePath(), e);
-    }
-  }
-
-  /**
-   * Get database file name
-   *
-   * @return database file name
-   */
-  public String dbName() {
-    return dbName;
-  }
-
-  SQLiteDatabase getDatabase() {
-    checkInitialized();
-    return dbOpenHelper.getReadableDatabase();
-  }
-
-  @SuppressWarnings("ResultOfMethodCallIgnored")
-  private void createDirIfNeeded(File file) {
-    if (!file.exists()) file.mkdir();
-  }
-
-  /**
-   * throw if {@link Historian#initialize()} is not called.
-   */
-  private void checkInitialized() {
-    if (!initialized) throw new IllegalStateException("Historian#initialize is not called");
-  }
-
-
-  public interface Callbacks {
-    void onSuccess();
-
-    void onFailure(Throwable throwable);
-  }
-
-  /**
-   * Builder class for {@link net.yslibrary.historian.Historian}
-   */
-  @SuppressWarnings("WeakerAccess")
-  public static class Builder {
-
-    private final Context context;
-    private File directory;
-    private String name = DB_NAME;
-    private int size = SIZE;
-    private int logLevel = LOG_LEVEL;
-    private boolean debug = false;
-    private Callbacks callbacks = null;
-
-    Builder(Context context) {
-      this.context = context.getApplicationContext();
-      directory = context.getFilesDir();
+        executorService = Executors.newSingleThreadExecutor();
+        logWriterDB = new LogWriterDB(dbOpenHelper, size);
     }
 
     /**
-     * Specify a directory where Historian's Database file is stored.
+     * Get Builder
      *
-     * @param directory directory to save SQLite database file.
-     * @return Builder
+     * @param context Context
+     * @return {@link Builder}
      */
     @CheckResult
-    public Builder directory(File directory) {
-      this.directory = directory;
-      return this;
+    public static Builder builder(Context context) {
+        return new Builder(context);
     }
 
     /**
-     * Specify a name of the Historian's Database file
+     * initialize
+     */
+    public void initialize() {
+        if (initialized) return;
+
+        dbOpenHelper.getWritableDatabase();
+
+        initialized = true;
+    }
+
+    public void log(int priority, String tag, String message) {
+        checkInitialized();
+
+        if (priority < logLevel) return;
+        if (message == null || message.length() == 0) return;
+
+        executorService.execute(
+                new LogWritingTask(
+                        callbacks,
+                        logWriterDB,
+                        LogEntity.create(priority, tag, message, System.currentTimeMillis())
+                )
+        );
+    }
+
+    public void log(int priority, String tag, String message, Throwable t) {
+        checkInitialized();
+
+        if (priority < logLevel) return;
+        if (message == null || message.length() == 0) return;
+
+        executorService.execute(
+                new LogWritingTask(
+                        callbacks,
+                        logWriterDB,
+                        LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)
+                )
+        );
+    }
+
+    /**
+     * Terminate Historian
+     * This method will perform;
+     * - close underlying {@link net.yslibrary.historian.internal.DbOpenHelper}
      * <p>
-     * Default is {@link Historian#DB_NAME}
-     *
-     * @param name file name of the backing SQLite database file
-     * @return Builder
+     * After calling this method, all calls to this instance of {@link net.yslibrary.historian.Historian}
+     * can produce exception or undefined behavior.
      */
-    @CheckResult
-    public Builder name(String name) {
-      this.name = name;
-      return this;
+    public void terminate() {
+        checkInitialized();
+        dbOpenHelper.close();
     }
 
     /**
-     * Specify the max row number of the SQLite database
-     * <p>
-     * Default is 500.
-     *
-     * @param size max row number
-     * @return Builder
+     * delete cache
      */
-    @CheckResult
-    public Builder size(int size) {
-      if (size < 0) throw new IllegalArgumentException("size should be 0 or greater");
-      this.size = size;
-      return this;
+    public void delete() {
+        checkInitialized();
+        logWriterDB.delete();
     }
 
     /**
-     * Specify minimum log level to save. The value should be any one of
-     * {@link android.util.Log#VERBOSE},
-     * {@link android.util.Log#DEBUG},
-     * {@link android.util.Log#INFO},
-     * {@link android.util.Log#WARN},
-     * {@link android.util.Log#ERROR} or
-     * {@link android.util.Log#ASSERT}.
-     * <p>
-     * Default is {@link android.util.Log#INFO}
+     * Get absolute path of database file
      *
-     * @param logLevel log level
-     * @return Builder
+     * @return absolute path of database file
      */
-    @CheckResult
-    public Builder logLevel(int logLevel) {
-      this.logLevel = logLevel;
-      return this;
+    public String dbPath() {
+        checkInitialized();
+        try {
+            return directory.getCanonicalPath() + File.separator + dbName;
+        } catch (IOException e) {
+            throw new HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.getAbsolutePath(), e);
+        }
     }
 
     /**
-     * Enable/disable Historian's debug logs(not saved to SQLite).
-     * <p>
-     * Default is false.
+     * Get database file name
      *
-     * @param debug true: output logs. false: no debug logs
-     * @return Builder
+     * @return database file name
      */
-    @CheckResult
-    public Builder debug(boolean debug) {
-      this.debug = debug;
-      return this;
+    public String dbName() {
+        return dbName;
+    }
+
+    SQLiteDatabase getDatabase() {
+        checkInitialized();
+        return dbOpenHelper.getReadableDatabase();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void createDirIfNeeded(File file) {
+        if (!file.exists()) file.mkdir();
     }
 
     /**
-     * Specify callbacks. This callbacks are called each time Historian save a log.
-     * This callbacks are called on background thread.
-     * <p>
-     * Default is {@link DefaultCallbacks}
-     *
-     * @param callbacks callbacks to execute.
-     * @return Builder
+     * throw if {@link Historian#initialize()} is not called.
      */
-    @CheckResult
-    public Builder callbacks(Callbacks callbacks) {
-      this.callbacks = callbacks;
-      return this;
+    private void checkInitialized() {
+        if (!initialized) throw new IllegalStateException("Historian#initialize is not called");
+    }
+
+
+    public interface Callbacks {
+        void onSuccess();
+
+        void onFailure(Throwable throwable);
     }
 
     /**
-     * Build Historian. You need to call this method to use {@link Historian}
-     *
-     * @return {@link Historian}
+     * Builder class for {@link net.yslibrary.historian.Historian}
      */
-    @CheckResult
-    public Historian build() {
-      return new Historian(context, directory, name, size, logLevel, debug, callbacks);
-    }
-  }
+    @SuppressWarnings("WeakerAccess")
+    public static class Builder {
 
-  static class DefaultCallbacks implements Callbacks {
-    private final boolean debug;
+        private final Context context;
+        private File directory;
+        private String name = DB_NAME;
+        private int size = SIZE;
+        private int logLevel = LOG_LEVEL;
+        private boolean debug = false;
+        private Callbacks callbacks = null;
 
-    DefaultCallbacks(boolean debug) {
-      this.debug = debug;
+        Builder(Context context) {
+            this.context = context.getApplicationContext();
+            directory = context.getFilesDir();
+        }
+
+        /**
+         * Specify a directory where Historian's Database file is stored.
+         *
+         * @param directory directory to save SQLite database file.
+         * @return Builder
+         */
+        @CheckResult
+        public Builder directory(File directory) {
+            this.directory = directory;
+            return this;
+        }
+
+        /**
+         * Specify a name of the Historian's Database file
+         * <p>
+         * Default is {@link Historian#DB_NAME}
+         *
+         * @param name file name of the backing SQLite database file
+         * @return Builder
+         */
+        @CheckResult
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        /**
+         * Specify the max row number of the SQLite database
+         * <p>
+         * Default is 500.
+         *
+         * @param size max row number
+         * @return Builder
+         */
+        @CheckResult
+        public Builder size(int size) {
+            if (size < 0) throw new IllegalArgumentException("size should be 0 or greater");
+            this.size = size;
+            return this;
+        }
+
+        /**
+         * Specify minimum log level to save. The value should be any one of
+         * {@link android.util.Log#VERBOSE},
+         * {@link android.util.Log#DEBUG},
+         * {@link android.util.Log#INFO},
+         * {@link android.util.Log#WARN},
+         * {@link android.util.Log#ERROR} or
+         * {@link android.util.Log#ASSERT}.
+         * <p>
+         * Default is {@link android.util.Log#INFO}
+         *
+         * @param logLevel log level
+         * @return Builder
+         */
+        @CheckResult
+        public Builder logLevel(int logLevel) {
+            this.logLevel = logLevel;
+            return this;
+        }
+
+        /**
+         * Enable/disable Historian's debug logs(not saved to SQLite).
+         * <p>
+         * Default is false.
+         *
+         * @param debug true: output logs. false: no debug logs
+         * @return Builder
+         */
+        @CheckResult
+        public Builder debug(boolean debug) {
+            this.debug = debug;
+            return this;
+        }
+
+        /**
+         * Specify callbacks. This callbacks are called each time Historian save a log.
+         * This callbacks are called on background thread.
+         * <p>
+         * Default is {@link DefaultCallbacks}
+         *
+         * @param callbacks callbacks to execute.
+         * @return Builder
+         */
+        @CheckResult
+        public Builder callbacks(Callbacks callbacks) {
+            this.callbacks = callbacks;
+            return this;
+        }
+
+        /**
+         * Build Historian. You need to call this method to use {@link Historian}
+         *
+         * @return {@link Historian}
+         */
+        @CheckResult
+        public Historian build() {
+            return new Historian(context, directory, name, size, logLevel, debug, callbacks);
+        }
     }
 
-    @Override
-    public void onSuccess() {
-      // no-op
-    }
+    static class DefaultCallbacks implements Callbacks {
+        private final boolean debug;
 
-    @Override
-    public void onFailure(Throwable throwable) {
-      if (debug) Log.e(TAG, "Something happened while trying to save a log", throwable);
+        DefaultCallbacks(boolean debug) {
+            this.debug = debug;
+        }
+
+        @Override
+        public void onSuccess() {
+            // no-op
+        }
+
+        @Override
+        public void onFailure(Throwable throwable) {
+            if (debug) Log.e(TAG, "Something happened while trying to save a log", throwable);
+        }
     }
-  }
 }
