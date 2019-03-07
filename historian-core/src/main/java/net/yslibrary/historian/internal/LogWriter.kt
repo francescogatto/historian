@@ -5,7 +5,7 @@ package net.yslibrary.historian.internal
  */
 interface LogWriter {
 
-  fun log(log: LogEntity)
-  fun delete()
+    fun log(log: LogEntity)
+    fun delete()
 
 }

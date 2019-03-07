@@ -7,7 +7,9 @@ import android.util.Log;
 
 import net.yslibrary.historian.internal.DbOpenHelper;
 import net.yslibrary.historian.internal.LogEntity;
+import net.yslibrary.historian.internal.LogWriter;
 import net.yslibrary.historian.internal.LogWriterDB;
+import net.yslibrary.historian.internal.LogWriterFile;
 import net.yslibrary.historian.internal.LogWritingTask;
 
 import java.io.File;
@@ -29,7 +31,8 @@ public class Historian {
     private static final String TAG = "Historian";
 
     final DbOpenHelper dbOpenHelper;
-    final LogWriterDB logWriterDB;
+    final LogWriter logWriterDB;
+    final LogWriter logWriterFile;
     final Context context;
     final File directory;
     final String dbName;
@@ -68,6 +71,8 @@ public class Historian {
 
         executorService = Executors.newSingleThreadExecutor();
         logWriterDB = new LogWriterDB(dbOpenHelper, size);
+        logWriterFile = new LogWriterFile(dbOpenHelper.getContext(), size);
+
     }
 
     /**
@@ -102,7 +107,7 @@ public class Historian {
                 new LogWritingTask(
                         callbacks,
                         logWriterDB,
-                        LogEntity.create(priority, tag, message, System.currentTimeMillis())
+                        LogEntity.Companion.create(priority, tag, message, System.currentTimeMillis())
                 )
         );
     }
@@ -117,7 +122,7 @@ public class Historian {
                 new LogWritingTask(
                         callbacks,
                         logWriterDB,
-                        LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)
+                        LogEntity.Companion.create(priority, tag, message, System.currentTimeMillis(), t)
                 )
         );
     }

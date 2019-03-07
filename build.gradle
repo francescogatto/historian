@@ -45,7 +45,7 @@ String shell(String command) {
       System.err.println(err)
     }
   }
-  return proc.in.text;
+  return proc.in.text
 }
 
 task releng {

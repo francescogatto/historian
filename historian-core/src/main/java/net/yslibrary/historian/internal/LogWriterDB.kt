@@ -1,42 +1,46 @@
 package net.yslibrary.historian.internal
 
+import android.database.sqlite.SQLiteDatabase
+
+
 /**
  * Class for log writing operation
  */
 
-class LogWriterDB(private val dbOpenHelper: DbOpenHelper, private val size: Int) : LogWriter {
+class LogWriterDB(private val dbOpenHelper: DbOpenHelper, private val size: Long) : LogWriter {
 
 
-  override fun log(log: LogEntity) {
+    override fun log(log: LogEntity) {
 
-    dbOpenHelper.executeTransaction { db ->
-      // insert provided log
-      db.compileStatement(LogTable.INSERT).also {
-        it.bindString(1, log.priority)
-        it.bindString(2, log.tag ?: "")
-        it.bindString(3, log.message)
-        it.bindLong(4, log.timestamp)
-        it.execute()
-      }
+        dbOpenHelper.executeTransaction(object : DbOpenHelper.Transaction {
+            override fun call(db: SQLiteDatabase) {
+                // insert provided log
+                val insertStatement = db.compileStatement(LogTable.INSERT)
+                insertStatement.bindString(1, log.priority)
+                insertStatement.bindString(2, log.tag)
+                insertStatement.bindString(3, log.message)
+                insertStatement.bindLong(4, log.timestamp)
+                insertStatement.execute()
 
-      // delete if row count exceeds provided size
-      val deleteStatement = db.compileStatement(LogTable.DELETE_OLDER)
-      with(deleteStatement) {
-        bindLong(1, size.toLong())
-        execute()
-      }
+                // delete if row count exceeds provided size
+                val deleteStatement = db.compileStatement(LogTable.DELETE_OLDER)
+                deleteStatement.bindLong(1, size)
+                deleteStatement.execute()
+            }
+        })
     }
 
-    LogWriterFile(dbOpenHelper.context, size).log(log)
-  }
 
-
-  /**
-   * Clear logs in SQLite.
-   */
-  override fun delete() {
-    dbOpenHelper.executeTransaction { db -> db.delete(LogTable.NAME, null, arrayOf()) }
-  }
+    /**
+     * Clear logs in SQLite.
+     */
+    override fun delete() {
+        dbOpenHelper.executeTransaction(object : DbOpenHelper.Transaction {
+            override fun call(db: SQLiteDatabase) {
+                db.delete(LogTable.NAME, null, arrayOf())
+            }
+        })
+    }
 
 
 }

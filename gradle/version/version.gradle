@@ -39,9 +39,9 @@ ext.versionName = {
   return "${versionProps['major']}.${versionProps['minor']}.${versionProps['patch']}"
 }
 
-def Properties getVersionProps() {
+Properties getVersionProps() {
   def versionPropsFile = file("${project.rootDir}/gradle/version/version.properties")
-  def Properties versionProps = new Properties()
+    Properties versionProps = new Properties()
   versionProps.load(new FileInputStream(versionPropsFile))
   return versionProps
 }
