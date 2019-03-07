@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.github.ben-manes.versions'
 
 apply from: '../gradle/dependencies.gradle'
@@ -33,4 +35,8 @@ dependencies {
     exclude group: 'com.android.support', module: 'support-annotations'
   })
   testCompile deps.junit
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }
