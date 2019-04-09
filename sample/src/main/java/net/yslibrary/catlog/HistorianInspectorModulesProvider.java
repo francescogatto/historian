@@ -1,4 +1,4 @@
-package net.yslibrary.historian;
+package net.yslibrary.catlog;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,11 +21,11 @@ import java.util.List;
 public class HistorianInspectorModulesProvider implements InspectorModulesProvider {
 
     private final Context context;
-    private final Historian historian;
+    private final CatLog catLog;
 
-    public HistorianInspectorModulesProvider(Context context, Historian historian) {
+    public HistorianInspectorModulesProvider(Context context, CatLog catLog) {
         this.context = context;
-        this.historian = historian;
+        this.catLog = catLog;
     }
 
     @Override
@@ -36,13 +36,13 @@ public class HistorianInspectorModulesProvider implements InspectorModulesProvid
                             @Override
                             public List<File> getDatabaseFiles() {
                                 List<File> list = new ArrayList<>();
-                                list.add(new File(historian.dbPath()));
+                                list.add(new File(catLog.dbPath()));
                                 return list;
                             }
                         }, new DatabaseConnectionProvider() {
                     @Override
                     public SQLiteDatabase openDatabase(File file) throws SQLiteException {
-                        return historian.getDatabase();
+                        return catLog.getDatabase();
                     }
                 }))
                 .finish();

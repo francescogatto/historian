@@ -1,4 +1,4 @@
-package net.yslibrary.historian.internal
+package net.yslibrary.catlog.internal
 
 /**
  * @author Francesco Gatto <f.gatto@eco-mind.eu>

@@ -1,4 +1,4 @@
-package net.yslibrary.historian.sample
+package net.yslibrary.catlog.sample
 
 import java.io.Closeable
 

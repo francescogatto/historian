@@ -1,4 +1,4 @@
-package net.yslibrary.historian;
+package net.yslibrary.catlog;
 
 import org.junit.Test;
 

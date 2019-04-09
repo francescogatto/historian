@@ -12,63 +12,64 @@ def isCi = "true".equals(System.getenv("CI"))
 def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
 
 android {
-  compileSdkVersion 28
+    compileSdkVersion 28
 
-  defaultConfig {
-    minSdkVersion 15
-    targetSdkVersion 28
-    versionCode 1
-    versionName "1.0"
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
 
-    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-  }
-  buildTypes {
-    debug {
-      testCoverageEnabled true
     }
-    release {
-      minifyEnabled false
-      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    buildTypes {
+        debug {
+            testCoverageEnabled true
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
-  }
 
-  dexOptions {
-    // Skip pre-dexing when running on CI or when disabled via -Dpre-dex=false.
-    preDexLibraries = preDexEnabled && !isCi
-  }
-
-  testOptions {
-    unitTests.all {
-      jacoco {
-        includeNoLocationClasses = true
-      }
+    dexOptions {
+        // Skip pre-dexing when running on CI or when disabled via -Dpre-dex=false.
+        preDexLibraries = preDexEnabled && !isCi
     }
-  }
+
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
 }
 
 dependencies {
-  compile deps.appcompat
+    implementation deps.appcompat
+    implementation 'com.jakewharton.timber:timber:4.7.1'
 
-  androidTestCompile(deps.espresso, {
-    exclude group: 'com.android.support', module: 'support-annotations'
-  })
+    androidTestImplementation(deps.espresso, {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
 
-  testCompile deps.junit
-  testCompile deps.robolectric
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    androidTestImplementation deps.junit
+    androidTestImplementation deps.robolectric
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 publish {
-  artifactId = 'historian-core'
-  desc = "a simple logger which saves logs to SQLite, to get better understanding of user's environment"
+    artifactId = 'historian-core'
+    desc = "a simple logger which saves logs to SQLite, to get better understanding of user's environment"
 
-  def metadata = project.rootProject.ext.metadata
-  groupId = metadata.groupId
-  publishVersion = metadata.version
-  website = metadata.website
-  repository = metadata.repository
-  licences = metadata.licences
+    def metadata = project.rootProject.ext.metadata
+    groupId = metadata.groupId
+    publishVersion = metadata.version
+    website = metadata.website
+    repository = metadata.repository
+    licences = metadata.licences
 }
 
 // A list of directories which should be included in coverage report
@@ -77,27 +78,27 @@ def coverageSourceDirs = ['src/main/java']
 def coverageExcludeFiles = ['**/R.class', '**/R$*.class', '**/com/android/**/*.*']
 
 task jacocoTestReportDebug(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
-  group = "Reporting"
-  description = "Generate Jacoco coverage reports after running tests."
-  reports {
-    xml.enabled true
-    html.enabled true
-    csv.enabled false
-    xml.destination "${buildDir}/reports/jacoco/test/jacocoTestReportDebug.xml"
-    html.destination "${buildDir}/reports/coverage/debug"
-    classDirectories = files(
-        fileTree(
-            dir: "${buildDir}/intermediates/classes/debug",
-            exclude: coverageExcludeFiles))
-  }
-  sourceDirectories = files(coverageSourceDirs)
-  executionData = files "${buildDir}/jacoco/testDebugUnitTest.exec"
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+        xml.destination "${buildDir}/reports/jacoco/test/jacocoTestReportDebug.xml"
+        html.destination "${buildDir}/reports/coverage/debug"
+        classDirectories = files(
+                fileTree(
+                        dir: "${buildDir}/intermediates/classes/debug",
+                        exclude: coverageExcludeFiles))
+    }
+    sourceDirectories = files(coverageSourceDirs)
+    executionData = files "${buildDir}/jacoco/testDebugUnitTest.exec"
 
-  doLast {
-    println "jacoco xml report has been generated to file://${buildDir}/reports/jacoco/test/jacocoTestReportDebug.xml"
-    println "jacoco html report has been generated to file://${reports.html.destination}/index.html"
-  }
+    doLast {
+        println "jacoco xml report has been generated to file://${buildDir}/reports/jacoco/test/jacocoTestReportDebug.xml"
+        println "jacoco html report has been generated to file://${reports.html.destination}/index.html"
+    }
 }
 repositories {
-  mavenCentral()
+    mavenCentral()
 }

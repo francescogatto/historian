@@ -1,10 +1,10 @@
-package net.yslibrary.historian
+package net.yslibrary.catlog
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.support.annotation.CheckResult
 import android.util.Log
-import net.yslibrary.historian.internal.*
+import net.yslibrary.catlog.internal.*
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -12,21 +12,22 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Historian
+ * CatLog
  */
 
-class Historian private constructor(internal val context: Context,
-                                    internal val directory: File,
-                                    internal val dbName: String,
-                                    internal val size: Int,
-                                    internal val logLevel: Int,
-                                    internal val debug: Boolean,
-                                    callbacks: Callbacks?) {
+class CatLog private constructor(internal val context: Context,
+                                 internal val directory: File,
+                                 internal val dbName: String,
+                                 internal val size: Int,
+                                 internal val logLevel: Int,
+                                 internal val debug: Boolean,
+                                 callbacks: Callbacks?) {
 
     internal val dbOpenHelper: DbOpenHelper
     internal val logWriterDB: LogWriter
     internal val logWriterFile: LogWriter
     internal val callbacks: Callbacks
+
 
     private val executorService: ExecutorService
     private var initialized = false
@@ -44,7 +45,7 @@ class Historian private constructor(internal val context: Context,
         try {
             dbOpenHelper = DbOpenHelper(context, directory.canonicalPath + File.separator + dbName)
         } catch (e: IOException) {
-            throw HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.absolutePath, e)
+            throw CatLogFileException("Could not resolve the canonical path to the CatLog DB file: " + directory.absolutePath, e)
         }
 
         if (debug)
@@ -61,49 +62,32 @@ class Historian private constructor(internal val context: Context,
      */
     fun initialize() {
         if (initialized) return
-
         dbOpenHelper.writableDatabase
-
         initialized = true
     }
 
     fun log(priority: Int, tag: String, message: String?) {
         checkInitialized()
-
         if (priority < logLevel) return
-        if (message == null || message.length == 0) return
-
-        executorService.execute(
-                LogWritingTask(
-                        callbacks,
-                        logWriterDB,
-                        LogEntity.create(priority, tag, message, System.currentTimeMillis())
-                )
-        )
+        if (message.isNullOrEmpty()) return
+        executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis())))
     }
 
     fun log(priority: Int, tag: String, message: String?, t: Throwable) {
         checkInitialized()
 
         if (priority < logLevel) return
-        if (message == null || message.length == 0) return
-
-        executorService.execute(
-                LogWritingTask(
-                        callbacks,
-                        logWriterDB,
-                        LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)
-                )
-        )
+        if (message.isNullOrEmpty()) return
+        executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)))
     }
 
     /**
-     * Terminate Historian
+     * Terminate CatLog
      * This method will perform;
-     * - close underlying [net.yslibrary.historian.internal.DbOpenHelper]
+     * - close underlying [net.yslibrary.catlog.internal.DbOpenHelper]
      *
      *
-     * After calling this method, all calls to this instance of [net.yslibrary.historian.Historian]
+     * After calling this method, all calls to this instance of [net.yslibrary.catlog.CatLog]
      * can produce exception or undefined behavior.
      */
     fun terminate() {
@@ -129,7 +113,7 @@ class Historian private constructor(internal val context: Context,
         try {
             return directory.canonicalPath + File.separator + dbName
         } catch (e: IOException) {
-            throw HistorianFileException("Could not resolve the canonical path to the Historian DB file: " + directory.absolutePath, e)
+            throw CatLogFileException("Could not resolve the canonical path to the CatLog DB file: " + directory.absolutePath, e)
         }
 
     }
@@ -148,10 +132,10 @@ class Historian private constructor(internal val context: Context,
     }
 
     /**
-     * throw if [Historian.initialize] is not called.
+     * throw if [CatLog.initialize] is not called.
      */
     private fun checkInitialized() {
-        if (!initialized) throw IllegalStateException("Historian#initialize is not called")
+        if (!initialized) throw IllegalStateException("CatLog#initialize is not called")
     }
 
 
@@ -162,7 +146,7 @@ class Historian private constructor(internal val context: Context,
     }
 
     /**
-     * Builder class for [net.yslibrary.historian.Historian]
+     * Builder class for [net.yslibrary.catlog.CatLog]
      */
     class Builder internal constructor(context: Context) {
 
@@ -180,7 +164,7 @@ class Historian private constructor(internal val context: Context,
         }
 
         /**
-         * Specify a directory where Historian's Database file is stored.
+         * Specify a directory where CatLog's Database file is stored.
          *
          * @param directory directory to save SQLite database file.
          * @return Builder
@@ -192,10 +176,10 @@ class Historian private constructor(internal val context: Context,
         }
 
         /**
-         * Specify a name of the Historian's Database file
+         * Specify a name of the CatLog's Database file
          *
          *
-         * Default is [Historian.DB_NAME]
+         * Default is [CatLog.DB_NAME]
          *
          * @param name file name of the backing SQLite database file
          * @return Builder
@@ -244,7 +228,7 @@ class Historian private constructor(internal val context: Context,
         }
 
         /**
-         * Enable/disable Historian's debug logs(not saved to SQLite).
+         * Enable/disable CatLog's debug logs(not saved to SQLite).
          *
          *
          * Default is false.
@@ -259,7 +243,7 @@ class Historian private constructor(internal val context: Context,
         }
 
         /**
-         * Specify callbacks. This callbacks are called each time Historian save a log.
+         * Specify callbacks. This callbacks are called each time CatLog save a log.
          * This callbacks are called on background thread.
          *
          *
@@ -275,13 +259,13 @@ class Historian private constructor(internal val context: Context,
         }
 
         /**
-         * Build Historian. You need to call this method to use [Historian]
+         * Build CatLog. You need to call this method to use [CatLog]
          *
-         * @return [Historian]
+         * @return [CatLog]
          */
         @CheckResult
-        fun build(): Historian {
-            return Historian(context, directory!!, name, size, logLevel, debug, callbacks)
+        fun build(): CatLog {
+            return CatLog(context, directory!!, name, size, logLevel, debug, callbacks)
         }
     }
 
@@ -302,7 +286,7 @@ class Historian private constructor(internal val context: Context,
         internal val SIZE = 500
         internal val LOG_LEVEL = Log.INFO
 
-        private val TAG = "Historian"
+        private val TAG = "CatLog"
 
         /**
          * Get Builder

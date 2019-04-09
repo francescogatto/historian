@@ -1,4 +1,4 @@
-package net.yslibrary.historian.sample
+package net.yslibrary.catlog.sample
 
 import timber.log.Timber
 

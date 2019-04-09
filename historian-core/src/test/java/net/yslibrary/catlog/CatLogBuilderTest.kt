@@ -1,25 +1,19 @@
-package net.yslibrary.historian
+package net.yslibrary.catlog
 
 import android.content.Context
 import android.util.Log
-
+import org.hamcrest.Matchers.instanceOf
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 
-import org.hamcrest.Matchers.instanceOf
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
-
 /**
  * Created by yshrsmz on 2017/01/22.
  */
 @RunWith(ConfiguredRobolectricTestRunner::class)
-class HistorianBuilderTest {
+class CatLogBuilderTest {
 
     private var context: Context? = null
 
@@ -30,26 +24,26 @@ class HistorianBuilderTest {
 
     @Test
     fun build_with_defaults() {
-        val historian = Historian.builder(context!!).build()
+        val historian = CatLog.builder(context!!).build()
 
         assertNotNull(historian.context)
         assertNotNull(historian.dbOpenHelper)
         assertNotNull(historian.logWriterDB)
 
-        //    String path = context.getFilesDir() + File.separator + Historian.DB_NAME;
+        //    String path = context.getFilesDir() + File.separator + CatLog.DB_NAME;
         //    assertEquals(historian.dbOpenHelper.getDatabaseName(), path);
 
-        assertEquals(Historian.LOG_LEVEL, historian.logLevel)
+        assertEquals(CatLog.LOG_LEVEL, historian.logLevel)
         assertEquals(context!!.filesDir, historian.directory)
-        assertEquals(Historian.DB_NAME, historian.dbName)
-        assertEquals(Historian.SIZE, historian.size)
+        assertEquals(CatLog.DB_NAME, historian.dbName)
+        assertEquals(CatLog.SIZE, historian.size)
         assertFalse(historian.debug)
-        assertThat(historian.callbacks, instanceOf<Any>(Historian.DefaultCallbacks::class.java))
+        assertThat(historian.callbacks, instanceOf<Any>(CatLog.DefaultCallbacks::class.java))
     }
 
     @Test
     fun build_with_custom_params() {
-        val historian = Historian.builder(context!!)
+        val historian = CatLog.builder(context!!)
                 .name("test.db")
                 .directory(context!!.getExternalFilesDir(null)!!)
                 .logLevel(Log.DEBUG)
@@ -73,7 +67,7 @@ class HistorianBuilderTest {
         assertThat(historian.callbacks, instanceOf<Any>(TestCallbacks::class.java))
     }
 
-    internal inner class TestCallbacks : Historian.Callbacks {
+    internal inner class TestCallbacks : CatLog.Callbacks {
 
         override fun onSuccess() {
 

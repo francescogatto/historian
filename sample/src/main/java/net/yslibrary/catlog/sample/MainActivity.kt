@@ -1,10 +1,8 @@
-package net.yslibrary.historian.sample
+package net.yslibrary.catlog.sample
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -12,16 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.Toast
 
-import net.yslibrary.historian.Historian
-
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicLong
 
 import timber.log.Timber
@@ -39,19 +28,18 @@ class MainActivity : AppCompatActivity() {
         val fab = findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener {
             var i = 0
-            val l = 100
             while (i < 100) {
-                //  Timber.i("test: %d", counter.getAndIncrement());
+                Timber.i("test: %d", counter.getAndIncrement());
                 Timber.tag("TEST").i("test: %d", counter.getAndIncrement())
                 i++
-                //      Timber.e( new RuntimeException("sjndjf"),"Error");
+                Timber.e( RuntimeException("sjndjf"),"Error");
             }
         }
 
         val exportButton = findViewById(R.id.export)
         exportButton.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-               // export(this@MainActivity, App.getHistorian(this@MainActivity))
+               // export(this@MainActivity, App.getCatLog(this@MainActivity))
             } else {
                 ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
             }
@@ -81,18 +69,18 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 0) {
             if (Manifest.permission.WRITE_EXTERNAL_STORAGE == permissions[0] && PackageManager.PERMISSION_GRANTED == grantResults[0]) {
-              //  export(this, App.getHistorian(this))
+              //  export(this, App.getCatLog(this))
             }
         }
     }
 
-  /*  fun export(context: Context, historian: Historian) {
+  /*  fun export(context: Context, catLog: CatLog) {
         val dir = File(Environment.getExternalStorageDirectory(), "HistorianSample")
         if (!dir.exists()) {
             dir.mkdir()
         }
-        val dbPath = historian.dbPath()
-        val exportPath = dir.path + File.separator + historian.dbName()
+        val dbPath = catLog.dbPath()
+        val exportPath = dir.path + File.separator + catLog.dbName()
 
         var fis: FileInputStream? = null
         var output: OutputStream? = null

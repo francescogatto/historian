@@ -1,13 +1,12 @@
-package net.yslibrary.historian.internal
+package net.yslibrary.catlog.internal
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import android.util.Log.e
 
 /**
- * SQLiteOpenHelper for Historian
+ * SQLiteOpenHelper for CatLog
  */
 
 class DbOpenHelper(val context: Context, name: String) : SQLiteOpenHelper(context, name, null, DB_VERSION) {

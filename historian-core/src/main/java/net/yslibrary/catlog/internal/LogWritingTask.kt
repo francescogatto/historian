@@ -1,12 +1,12 @@
-package net.yslibrary.historian.internal
+package net.yslibrary.catlog.internal
 
-import net.yslibrary.historian.Historian
+import net.yslibrary.catlog.CatLog
 
 /**
  * Runnable implementation writing logs and executing callbacks
  */
 
-class LogWritingTask(private val callbacks: Historian.Callbacks,
+class LogWritingTask(private val callbacks: CatLog.Callbacks,
                      private val logWriter: LogWriter,
                      private val log: LogEntity) : Runnable {
 

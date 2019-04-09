@@ -1,6 +1,4 @@
-package net.yslibrary.historian.internal
-
-import android.util.Log
+package net.yslibrary.catlog.internal
 
 /**
  * Entity class representing log
