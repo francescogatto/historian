@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.sample
+package net.francescogatto.catlog.sample
 
 import android.Manifest
 import android.content.pm.PackageManager

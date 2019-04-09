@@ -2,8 +2,8 @@ Historian
 ===
 
 [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-Historian-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/5329)
-[![CircleCI](https://circleci.com/gh/yshrsmz/historian.svg?style=svg)](https://circleci.com/gh/yshrsmz/historian)
-[![codecov](https://codecov.io/gh/yshrsmz/historian/branch/master/graph/badge.svg)](https://codecov.io/gh/yshrsmz/historian)
+[![CircleCI](https://circleci.com/gh/yshrsmz/catLog.svg?style=svg)](https://circleci.com/gh/yshrsmz/catLog)
+[![codecov](https://codecov.io/gh/yshrsmz/catLog/branch/master/graph/badge.svg)](https://codecov.io/gh/yshrsmz/catLog)
 
 Historian is a custom [Timber](https://github.com/JakeWharton/timber).Tree implementation that saves logs to SQLite, so that you can see/download the SQLite file later for debugging.
 
@@ -11,12 +11,12 @@ This library is primarily made to help debugging crash in consumers' devices.
 
 ## Installation
 
-Historian is distributed via jCenter. [![Bintray](https://img.shields.io/bintray/v/yshrsmz/maven/historian-core.svg)](https://bintray.com/yshrsmz/maven/historian-core/view)
+Historian is distributed via jCenter. [![Bintray](https://img.shields.io/bintray/v/yshrsmz/maven/catLog-core.svg)](https://bintray.com/yshrsmz/maven/catLog-core/view)
 
 ```gradle
 dependencies {
-  compile 'net.yslibrary.historian:historian-core:LATEST_LIBRARY_VERSION'
-  compile 'net.yslibrary.historian:historian-tree:LATEST_LIBRARY_VERSION'
+  compile 'net.yslibrary.catLog:catLog-core:LATEST_LIBRARY_VERSION'
+  compile 'net.yslibrary.catLog:catLog-tree:LATEST_LIBRARY_VERSION'
   compile 'com.jakewharton.timber:timber:4.5.1'
 }
 ```
@@ -26,11 +26,11 @@ dependencies {
 ```java
 class App extends Application {
 
-    Historian historian;
+    Historian catLog;
 
     @Override
     public void onCreate() {
-        historian = Historian.builder(context)
+        catLog = Historian.builder(context)
             // db name. defaults to "log.db"
             .name("log.db")
             // a directory where the db file will be saved. defaults to `context.getFiles()`.
@@ -43,16 +43,16 @@ class App extends Application {
             .debug(true)
             .build();
 
-        // initialize historian
-        historian.initialize();
+        // initialize catLog
+        catLog.initialize();
 
-        Timber.plant(HistorianTree.with(historian));
+        Timber.plant(HistorianTree.with(catLog));
 
         // delete all saved logs
-        historian.delete();
+        catLog.delete();
 
         // provide db path in Uri
-        historian.dbPath();
+        catLog.dbPath();
     }
 }
 ```

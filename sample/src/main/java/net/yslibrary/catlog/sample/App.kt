@@ -1,10 +1,10 @@
-package net.yslibrary.catlog.sample
+package net.francescogatto.catlog.sample
 
 import android.app.Application
 import android.content.Context
 import com.facebook.stetho.Stetho
-import net.yslibrary.catlog.CatLog
-import net.yslibrary.catlog.CatLogTree
+import net.francescogatto.catlog.CatLog
+import net.francescogatto.catlog.CatLogTree
 import timber.log.Timber
 
 class App : Application() {

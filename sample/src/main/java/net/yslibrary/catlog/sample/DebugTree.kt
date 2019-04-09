@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.sample
+package net.francescogatto.catlog.sample
 
 import timber.log.Timber
 

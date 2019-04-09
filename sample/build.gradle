@@ -8,7 +8,7 @@ apply from: '../gradle/dependencies.gradle'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "net.yslibrary.catlog.sample"
+        applicationId "net.francescogatto.catlog.sample"
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 1
@@ -28,7 +28,7 @@ dependencies {
     implementation deps.design
     implementation deps.stetho
     implementation deps.timber
-    implementation project(':historian-core')
+    implementation project(':catlog')
 
     androidTestImplementation(deps.espresso, {
         exclude group: 'com.android.support', module: 'support-annotations'

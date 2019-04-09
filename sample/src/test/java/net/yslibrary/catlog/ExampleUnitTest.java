@@ -1,4 +1,4 @@
-package net.yslibrary.catlog;
+package net.francescogatto.catlog;
 
 import org.junit.Test;
 
