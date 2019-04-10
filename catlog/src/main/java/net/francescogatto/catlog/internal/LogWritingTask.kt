@@ -1,6 +1,6 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
-import net.yslibrary.catlog.CatLog
+import net.francescogatto.catlog.CatLog
 
 /**
  * Runnable implementation writing logs and executing callbacks

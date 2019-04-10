@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
 import android.content.Context
 import android.util.Log
@@ -13,7 +13,7 @@ import java.util.Date
  * Class for log writing operation
  */
 
-class LogWriterFile(val context: Context, private val size: Int) : LogWriter {
+class LogWriterFile(val context: Context, private val size: Int, private val file: File) : LogWriter {
 
     override fun log(log: LogEntity) {
         if (log.tag == null) {
@@ -25,38 +25,34 @@ class LogWriterFile(val context: Context, private val size: Int) : LogWriter {
     }
 
     fun appendLog(text: String) {
-        val logFile = File(context.cacheDir.toString() + "/log.txt")
-        if (!logFile.exists()) {
+        if (!file.exists()) {
             try {
-                logFile.createNewFile()
+                file.createNewFile()
             } catch (e: IOException) {
                 e.printStackTrace()
             }
-
         }
         try {
-            //BufferedWriter for performance, true to set append to file flag
-            val buf = BufferedWriter(FileWriter(logFile, true))
+            val buf = BufferedWriter(FileWriter(file, true))
             buf.append(text)
             buf.newLine()
             buf.close()
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
+        //FIXME manages the max file lines number
     }
 
     /**
      * Clear logs in SQLite.
      */
     override fun delete() {
-
+        file.delete()
     }
 
     companion object {
         private val TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
         private val MSG_FORMAT = "%s: %s - %s"  // timestamp, tag, message
-        private val sBufferedWriter: BufferedWriter? = null
 
         private fun formatMsg(tag: String, msg: String): String {
             return String.format(MSG_FORMAT, currentTimeStamp, tag, msg)

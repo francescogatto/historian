@@ -1,10 +1,13 @@
-package net.yslibrary.catlog
+package net.francescogatto.catlog
 
+import android.app.Application
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.support.annotation.CheckResult
+import android.preference.PreferenceManager
 import android.util.Log
-import net.yslibrary.catlog.internal.*
+import androidx.annotation.CheckResult
+import net.francescogatto.catlog.internal.*
+import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -16,17 +19,18 @@ import java.util.concurrent.Executors
  */
 
 class CatLog private constructor(internal val context: Context,
-                                 internal val directory: File,
-                                 internal val dbName: String,
-                                 internal val size: Int,
-                                 internal val logLevel: Int,
-                                 internal val debug: Boolean,
+                                 private val directory: File,
+                                 private val name: String,
+                                 private val size: Int,
+                                 private val logLevel: Int,
+                                 private val debug: Boolean,
+                                 private val typeOfPersistence: Type,
                                  callbacks: Callbacks?) {
 
-    internal val dbOpenHelper: DbOpenHelper
-    internal val logWriterDB: LogWriter
-    internal val logWriterFile: LogWriter
-    internal val callbacks: Callbacks
+    private val dbOpenHelper: DbOpenHelper
+    private lateinit var logWriterDB: LogWriter
+    private lateinit var logWriterFile: LogWriter
+    private val callbacks: Callbacks
 
 
     private val executorService: ExecutorService
@@ -43,26 +47,44 @@ class CatLog private constructor(internal val context: Context,
 
         createDirIfNeeded(directory)
         try {
-            dbOpenHelper = DbOpenHelper(context, directory.canonicalPath + File.separator + dbName)
+            dbOpenHelper = DbOpenHelper(context, directory.canonicalPath + File.separator + name + ".db")
         } catch (e: IOException) {
-            throw CatLogFileException("Could not resolve the canonical path to the CatLog DB file: " + directory.absolutePath, e)
+            throw CatLogFileException("Could not resolve the canonical path to the CatLog file: " + directory.absolutePath, e)
         }
 
-        if (debug)
-            Log.d(TAG, String.format(Locale.ENGLISH, "backing database file will be created at: %s", dbOpenHelper.databaseName))
+        if (debug) Timber.tag(TAG).d(String.format(Locale.ENGLISH, "backing database file will be created at: %s", dbOpenHelper.databaseName))
 
         executorService = Executors.newSingleThreadExecutor()
-        logWriterDB = LogWriterDB(dbOpenHelper, size.toLong())
-        logWriterFile = LogWriterFile(dbOpenHelper.context, size)
+        if (isDBType) logWriterDB = LogWriterDB(dbOpenHelper, size.toLong())
+        if (isFileType) logWriterFile = LogWriterFile(dbOpenHelper.context, size, File(directory.canonicalPath + File.separator + name + ".txt"))
 
     }
+
+    private val isFileType get() = typeOfPersistence == Type.FILE
+    @Deprecated("TO deprecate")
+    private val isDBType get() = typeOfPersistence == Type.DATABASE
 
     /**
      * initialize
      */
     fun initialize() {
         if (initialized) return
-        dbOpenHelper.writableDatabase
+        if (isDBType) dbOpenHelper.writableDatabase
+        initialized = true
+    }
+
+    /**
+     * initialize
+     */
+    fun initializeAndSendLogAfterException(application: Application) {
+        if (initialized) return
+
+        if (PreferenceManager.getDefaultSharedPreferences(application).getBoolean("error", false)) {
+            PreferenceManager.getDefaultSharedPreferences(application).edit().putBoolean("error", false).apply()
+        }
+        Thread.setDefaultUncaughtExceptionHandler(AppExceptionHandler(Thread.getDefaultUncaughtExceptionHandler(), Thread.getDefaultUncaughtExceptionHandler(), application))
+
+        if (isDBType) dbOpenHelper.writableDatabase
         initialized = true
     }
 
@@ -70,29 +92,34 @@ class CatLog private constructor(internal val context: Context,
         checkInitialized()
         if (priority < logLevel) return
         if (message.isNullOrEmpty()) return
-        executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis())))
+        when {
+            isFileType -> executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis())))
+            else -> executorService.execute(LogWritingTask(callbacks, logWriterDB, LogEntity.create(priority, tag, message, System.currentTimeMillis())))
+        }
     }
 
     fun log(priority: Int, tag: String, message: String?, t: Throwable) {
         checkInitialized()
-
         if (priority < logLevel) return
         if (message.isNullOrEmpty()) return
-        executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)))
+        when {
+            isFileType -> executorService.execute(LogWritingTask(callbacks, logWriterFile, LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)))
+            else -> executorService.execute(LogWritingTask(callbacks, logWriterDB, LogEntity.create(priority, tag, message, System.currentTimeMillis(), t)))
+        }
     }
 
     /**
      * Terminate CatLog
      * This method will perform;
-     * - close underlying [net.yslibrary.catlog.internal.DbOpenHelper]
+     * - close underlying [net.francescogatto.catlog.internal.DbOpenHelper]
      *
      *
-     * After calling this method, all calls to this instance of [net.yslibrary.catlog.CatLog]
+     * After calling this method, all calls to this instance of [net.francescogatto.catlog.CatLog]
      * can produce exception or undefined behavior.
      */
     fun terminate() {
         checkInitialized()
-        dbOpenHelper.close()
+        if (isDBType) dbOpenHelper.close()
     }
 
     /**
@@ -100,7 +127,8 @@ class CatLog private constructor(internal val context: Context,
      */
     fun delete() {
         checkInitialized()
-        logWriterDB.delete()
+        if (isDBType) logWriterDB.delete()
+        if (isFileType) logWriterFile.delete()
     }
 
     /**
@@ -108,10 +136,10 @@ class CatLog private constructor(internal val context: Context,
      *
      * @return absolute path of database file
      */
-    fun dbPath(): String {
+    fun path(): String {
         checkInitialized()
         try {
-            return directory.canonicalPath + File.separator + dbName
+            return directory.canonicalPath + File.separator + name
         } catch (e: IOException) {
             throw CatLogFileException("Could not resolve the canonical path to the CatLog DB file: " + directory.absolutePath, e)
         }
@@ -123,8 +151,8 @@ class CatLog private constructor(internal val context: Context,
      *
      * @return database file name
      */
-    fun dbName(): String {
-        return dbName
+    fun name(): String {
+        return name
     }
 
     private fun createDirIfNeeded(file: File) {
@@ -146,21 +174,29 @@ class CatLog private constructor(internal val context: Context,
     }
 
     /**
-     * Builder class for [net.yslibrary.catlog.CatLog]
+     * Builder class for [net.francescogatto.catlog.CatLog]
      */
     class Builder internal constructor(context: Context) {
 
-        private val context: Context
-        private var directory: File? = null
-        private var name = DB_NAME
+        private val context: Context = context.applicationContext
+        private var directory = context.filesDir
+        private var typeOfPersistence: Type = Type.FILE
+        private var name = NAME
         private var size = SIZE
         private var logLevel = LOG_LEVEL
         private var debug = false
         private var callbacks: Callbacks? = null
 
-        init {
-            this.context = context.applicationContext
-            directory = context.filesDir
+        /**
+         * Specify how to save the log
+         *
+         * @param type the CatLog type
+         * @return Builder
+         */
+        @CheckResult
+        fun typeOfPersistence(type: Type): Builder {
+            this.typeOfPersistence = type
+            return this
         }
 
         /**
@@ -191,7 +227,7 @@ class CatLog private constructor(internal val context: Context,
         }
 
         /**
-         * Specify the max row number of the SQLite database
+         * Specify the max lines of log
          *
          *
          * Default is 500.
@@ -265,7 +301,7 @@ class CatLog private constructor(internal val context: Context,
          */
         @CheckResult
         fun build(): CatLog {
-            return CatLog(context, directory!!, name, size, logLevel, debug, callbacks)
+            return CatLog(context, directory, name, size, logLevel, debug, typeOfPersistence, callbacks)
         }
     }
 
@@ -282,7 +318,7 @@ class CatLog private constructor(internal val context: Context,
 
     companion object {
 
-        internal val DB_NAME = "log.db"
+        internal val NAME = "log"
         internal val SIZE = 500
         internal val LOG_LEVEL = Log.INFO
 
@@ -298,5 +334,9 @@ class CatLog private constructor(internal val context: Context,
         fun builder(context: Context): Builder {
             return Builder(context)
         }
+    }
+
+    enum class Type {
+        FILE, DATABASE
     }
 }

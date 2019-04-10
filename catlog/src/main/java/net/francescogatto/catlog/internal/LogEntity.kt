@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
 /**
  * Entity class representing log

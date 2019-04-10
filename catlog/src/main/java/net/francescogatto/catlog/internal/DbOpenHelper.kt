@@ -1,9 +1,9 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.util.Log
+import timber.log.Timber
 
 /**
  * SQLiteOpenHelper for CatLog
@@ -16,25 +16,24 @@ class DbOpenHelper(val context: Context, name: String) : SQLiteOpenHelper(contex
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        var oldVersion = oldVersion
-        if (oldVersion == 1) {
+        if (oldVersion < newVersion) {
             db.execSQL(LogTable.DROP_TABLE)
             db.execSQL(LogTable.CREATE_TABLE)
-            oldVersion++
         }
     }
 
 
-
     fun executeTransaction(transaction: Transaction) {
-        try {
-            writableDatabase.beginTransaction()
-            transaction.call(writableDatabase)
-            writableDatabase.setTransactionSuccessful()
-        } catch (e: Exception ){
-            Log.e("ERROR","Error while inserting", e)
-        } finally {
-            writableDatabase.endTransaction()
+        with(writableDatabase) {
+            try {
+                beginTransaction()
+                transaction.call(this)
+                setTransactionSuccessful()
+            } catch (e: Exception) {
+                Timber.e(e, "Error while inserting")
+            } finally {
+                endTransaction()
+            }
         }
     }
 
@@ -43,6 +42,6 @@ class DbOpenHelper(val context: Context, name: String) : SQLiteOpenHelper(contex
     }
 
     companion object {
-        private val DB_VERSION = 2
+        private const val DB_VERSION = 2
     }
 }

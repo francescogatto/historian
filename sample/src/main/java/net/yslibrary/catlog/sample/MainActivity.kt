@@ -3,17 +3,16 @@ package net.francescogatto.catlog.sample
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
-
-import java.util.concurrent.atomic.AtomicLong
-
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicLong
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,22 +23,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-
         val fab = findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener {
             var i = 0
             while (i < 100) {
+                4 / 0
                 Timber.i("test: %d", counter.getAndIncrement());
                 Timber.tag("TEST").i("test: %d", counter.getAndIncrement())
                 i++
-                Timber.e( RuntimeException("sjndjf"),"Error");
+                Timber.e(RuntimeException("sjndjf"), "Error");
             }
         }
 
-        val exportButton = findViewById(R.id.export)
+        val exportButton = findViewById<Button>(R.id.export)
         exportButton.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-               // export(this@MainActivity, App.getCatLog(this@MainActivity))
+                // export(this@MainActivity, App.getCatLog(this@MainActivity))
             } else {
                 ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
             }
@@ -69,43 +68,43 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 0) {
             if (Manifest.permission.WRITE_EXTERNAL_STORAGE == permissions[0] && PackageManager.PERMISSION_GRANTED == grantResults[0]) {
-              //  export(this, App.getCatLog(this))
+                //  export(this, App.getCatLog(this))
             }
         }
     }
 
-  /*  fun export(context: Context, catLog: CatLog) {
-        val dir = File(Environment.getExternalStorageDirectory(), "HistorianSample")
-        if (!dir.exists()) {
-            dir.mkdir()
-        }
-        val dbPath = catLog.dbPath()
-        val exportPath = dir.path + File.separator + catLog.dbName()
+    /*  fun export(context: Context, catLog: CatLog) {
+          val dir = File(Environment.getExternalStorageDirectory(), "HistorianSample")
+          if (!dir.exists()) {
+              dir.mkdir()
+          }
+          val path = catLog.path()
+          val exportPath = dir.path + File.separator + catLog.name()
 
-        var fis: FileInputStream? = null
-        var output: OutputStream? = null
+          var fis: FileInputStream? = null
+          var output: OutputStream? = null
 
-        val dbFile = File(dbPath)
-        val file = File(exportPath)
+          val dbFile = File(path)
+          val file = File(exportPath)
 
-        // delete if exists
-        file.delete()
-        try {
-            fis = FileInputStream(dbFile)
-            output = FileOutputStream(exportPath)
-            val buffer = ByteArray(1024)
-            var length: Int
-            while ((length = fis.read(buffer)) > 0) output.write(buffer, 0, length)
-            //Close the streams
-            output.flush()
+          // delete if exists
+          file.delete()
+          try {
+              fis = FileInputStream(dbFile)
+              output = FileOutputStream(exportPath)
+              val buffer = ByteArray(1024)
+              var length: Int
+              while ((length = fis.read(buffer)) > 0) output.write(buffer, 0, length)
+              //Close the streams
+              output.flush()
 
-            Toast.makeText(context, "File exported to: $exportPath", Toast.LENGTH_SHORT).show()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(context, "Failed to export", Toast.LENGTH_SHORT).show()
-        } finally {
-            Util.closeQuietly(output)
-            Util.closeQuietly(fis)
-        }
-    }*/
+              Toast.makeText(context, "File exported to: $exportPath", Toast.LENGTH_SHORT).show()
+          } catch (e: IOException) {
+              e.printStackTrace()
+              Toast.makeText(context, "Failed to export", Toast.LENGTH_SHORT).show()
+          } finally {
+              Util.closeQuietly(output)
+              Util.closeQuietly(fis)
+          }
+      }*/
 }

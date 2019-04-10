@@ -36,7 +36,7 @@ public class HistorianInspectorModulesProvider implements InspectorModulesProvid
                             @Override
                             public List<File> getDatabaseFiles() {
                                 List<File> list = new ArrayList<>();
-                                list.add(new File(catLog.dbPath()));
+                                list.add(new File(catLog.path()));
                                 return list;
                             }
                         }, new DatabaseConnectionProvider() {

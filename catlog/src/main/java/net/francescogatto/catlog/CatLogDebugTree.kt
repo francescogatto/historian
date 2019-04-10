@@ -1,9 +1,16 @@
-package net.yslibrary.catlog
+package net.francescogatto.catlog
 
 import timber.log.Timber
 
 
-class CatLogTree (private val catLog: CatLog) : Timber.Tree() {
+class CatLogDebugTree(private val catLog: CatLog) : Timber.DebugTree() {
+
+    override fun createStackElementTag(element: StackTraceElement): String {
+        return String.format("(%s:%s) #%s ",
+                element.fileName,
+                element.lineNumber,
+                element.methodName)
+    }
 
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
         if (tag == null)

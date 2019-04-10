@@ -15,12 +15,12 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
     buildTypes {
@@ -50,6 +50,7 @@ android {
 dependencies {
     implementation deps.appcompat
     implementation 'com.jakewharton.timber:timber:4.7.1'
+    implementation 'com.afollestad.material-dialogs:core:2.7.0'
 
     androidTestImplementation(deps.espresso, {
         exclude group: 'com.android.support', module: 'support-annotations'

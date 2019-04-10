@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
 /**
  * Table definition of Log

@@ -1,4 +1,4 @@
-package net.yslibrary.catlog.internal
+package net.francescogatto.catlog.internal
 
 import android.database.sqlite.SQLiteDatabase
 
